@@ -19,31 +19,39 @@ object Decode {
 	*/
 	private def node(args: List[String]): (Node, List[String]) = args.head match {
 		case "|||" => (gui.Nothing(), args.tail)
-		case gui.Nothing.name => (gui.Nothing(), args drop 2)
-		case gui.Text.name => {
+		case gui.Nothing.tag.name => (gui.Nothing(), args drop 2)
+		case gui.Text.tag.name => {
 			val (a, b, c, d, id, sid, rest) = Consume[String, options.TextType, options.Size, Boolean, Int, Int](args.tail)
 			(gui.Text(a, b, c, d, id, sid), rest.tail)
 		}
-		case gui.Image.name => {
+		case gui.Image.tag.name => {
 			val (a, b, c, id, sid, rest) = Consume[String, Double, Double, Int, Int](args.tail)
 			(gui.Image(a, b, c, id, sid), rest.tail)
 		}
-		case gui.Notification.name => {
+		case gui.Notification.tag.name => {
 			val (a, b, id, sid, rest) = Consume[gui.Text.Text, options.Position, Int, Int](args.tail)
 			(gui.Notification(a, b, id, sid), rest.tail)
 		}
-		case gui.Close.name => (gui.Close(), args.tail)
-		case gui.Button.name => {
+		case gui.Close.tag.name => (gui.Close(), args.tail)
+		case gui.Button.tag.name => {
 			val (a, b, id, sid, rest) = Consume[gui.Text.Text, options.Size, Int, Int](args.tail)
 			(gui.Button(a, b, id, sid), rest.tail)
 		}
-		case Block.name => {
+		case gui.Block.tag.name => {
 			val (a, b, c, id, sid, rest) = Consume[List[gui.Node], Int, Int, Int, Int](args.tail)
 			(gui.Block(a, b, c, id, sid), rest.tail)
 		}
-		case LoList.name => {
+		case gui.LoList.tag.name => {
 			val (a, id, sid, rest) = Consume[List[gui.Node], Int, Int](args.tail)
 			(gui.LoList(a, id, sid), rest.tail)
+		}
+		case gui.Navigation.tag.name => {
+			val (a, b, id, sid, rest) = Consume[gui.LoList.LoList, Boolean, Int, Int](args.tail)
+			(gui.Navigation(a, b, id, sid), rest.tail)
+		}
+		case gui.ButtonToolbar.tag.name => {
+			val (a, b, id, sid, rest) = Consume[List[gui.Button.Button], options.Size, Int, Int](args.tail)
+			(gui.ButtonToolbar(a, b, id, sid), rest.tail)
 		}
 		case _ => (gui.Nothing(), List())
 	}
@@ -52,47 +60,47 @@ object Decode {
 	*/
 	private def cm(args: List[String]): (Command, List[String]) = args.head match {
 		case "|||" => (commands.Nothing(), args.tail)
-		case commands.Nothing.name => (commands.Nothing(), args drop 2)
-		case commands.Create.name => {
+		case commands.Nothing.tag.name => (commands.Nothing(), args drop 2)
+		case commands.Create.tag.name => {
 			val (item, rest) = Consume[gui.Node](args.tail)
 			(commands.Create(item), rest.tail)
 		}
-		case commands.Delete.name => {
+		case commands.Delete.tag.name => {
 			val (item, rest) = Consume[gui.Node](args.tail)
 			(commands.Delete(item), rest.tail)
 		}
-		case commands.Css.name => {
+		case commands.Css.tag.name => {
 			val (item, key, value, rest) = Consume[gui.Node, String, String](args.tail)
 			(commands.Css(item, key, value), rest.tail)
 		}
-		case commands.OnClick.name => {
+		case commands.OnClick.tag.name => {
 			val (item, comm, rest) = Consume[gui.Node, commands.Command](args.tail)
 			(commands.OnClick(item, comm), rest.tail)
 		}
 		case _ => (commands.Nothing(), args)
 	}
 	private def tType(s: String): Option[options.TextType] = s match {
-		case options.NoType.name => Some(options.NoType)
-		case options.Primary.name => Some(options.Primary)
-		case options.Success.name => Some(options.Success)
-		case options.Info.name => Some(options.Info)
-		case options.Warning.name => Some(options.Warning)
-		case options.Danger.name => Some(options.Danger)
+		case options.NoType.tag.name => Some(options.NoType)
+		case options.Primary.tag.name => Some(options.Primary)
+		case options.Success.tag.name => Some(options.Success)
+		case options.Info.tag.name => Some(options.Info)
+		case options.Warning.tag.name => Some(options.Warning)
+		case options.Danger.tag.name => Some(options.Danger)
 		case _ => None
 	}
 	private def pos(s: String): Option[options.Position] = s match {
-		case options.Top.name => Some(options.Top)
-		case options.Right.name => Some(options.Right)
-		case options.Bottom.name => Some(options.Bottom)
-		case options.Left.name => Some(options.Left)
+		case options.Top.tag.name => Some(options.Top)
+		case options.Right.tag.name => Some(options.Right)
+		case options.Bottom.tag.name => Some(options.Bottom)
+		case options.Left.tag.name => Some(options.Left)
 		case _ => None
 	}
 	private def size(s: String): Option[options.Size] = s match {
-		case options.XSmall.name => Some(options.XSmall)
-		case options.Small.name => Some(options.Small)
-		case options.Medium.name => Some(options.Medium)
-		case options.Large.name => Some(options.Large)
-		case options.XLarge.name => Some(options.XLarge)
+		case options.XSmall.tag.name => Some(options.XSmall)
+		case options.Small.tag.name => Some(options.Small)
+		case options.Medium.tag.name => Some(options.Medium)
+		case options.Large.tag.name => Some(options.Large)
+		case options.XLarge.tag.name => Some(options.XLarge)
 		case _ => None
 	}
 	/*
@@ -111,6 +119,7 @@ object Decode {
 					case TextType(item) => (item.asInstanceOf[A], args.tail)
 					case Size(item) => (item.asInstanceOf[A], args.tail)
 					case Position(item) => (item.asInstanceOf[A], args.tail)
+					case Option(item) => (item.asInstanceOf[A], args.tail)
 					case Integer(item) => (item.asInstanceOf[A], args.tail)
 					case Double(item) => (item.asInstanceOf[A], args.tail)
 					case Boolean(item) => (item.asInstanceOf[A], args.tail)
@@ -142,6 +151,11 @@ object Decode {
 			val (item1, item2, item3, rest1) = Consume[A,B,C](args)
 			val (item4, item5, item6, rest2) = Consume[D,E,F](rest1)
 			(item1, item2, item3, item4, item5, item6, rest2)
+		}
+		def apply[A,B,C,D,E,F,G](args: List[String]): (A,B,C,D,E,F,G, List[String]) = {
+			val (item1, item2, item3, rest1) = Consume[A,B,C](args)
+			val (item4, item5, item6, item7, rest2) = Consume[D,E,F,G](rest1)
+			(item1, item2, item3, item4, item5, item6, item7, rest2)
 		}
 
 		/* Decodes a list of commands of arbitrary length */
@@ -227,7 +241,7 @@ object Decode {
 			}
 		}
 		/*
-			Primitive extractors.  Require String
+			Primitive extractors
 		*/
 		object Double extends Parameter {
 			def apply(x: Double) = x.toString
@@ -237,9 +251,10 @@ object Decode {
 			}
 		}
 		object String extends Parameter {
+			val StrRegex = """'(.*)'""".r  // Match any literal surrounded by ' '
 			def apply(x: String) = x
 			def unapply(x: Any): Option[String] = x match {
-				case x: String => Some(x)
+				case StrRegex(value) => Some(value)
 				case _ => None
 			}
 		}
@@ -269,6 +284,15 @@ object Decode {
 			def apply(x: Int) = x.toString
 			def unapply(x: Any): Option[Int] = x match {
 				case s: String => try { Some(s.toInt) } catch { case _: Throwable => None}
+				case _ => None
+			}
+		}
+		object Option extends Parameter {
+			val OptionRegex = """Some\((.*)\)""".r
+			def apply(x: Option[Any]) = x.toString
+			def unapply(x: Any): Option[Option[Any]] = x match {
+				case OptionRegex(item) => Some(Some(item)) // LOL
+				case "None" => Some(None)
 				case _ => None
 			}
 		}

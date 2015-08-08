@@ -2,18 +2,13 @@ package interface
 
 import commands.Command
 trait Encoder {
-	val name: String
+	val tag: Tag
 	val aT = "~~"
 	val eT = "~~|||"
-	def encode: String = s"${name}"
+	def encode: String = s"${tag.name}"
 	override def toString = encode
 }
 
-object Encode {
-	def apply(cms: List[Command]): String = {
-		cms.mkString("~~")
-	}
-	def apply(cm: Command): String = {
-		Encode(List(cm))
-	}
+sealed case class Tag(name: String) {
+		override def toString = name
 }
